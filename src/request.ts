@@ -1,16 +1,10 @@
-export const RequiredProperties: string[] = [
-  'lang',
-  'src',
-  'problem'
-];
+import { Test } from './test';
 
 export interface Request {
   lang: string;
   src: string;
-  submittedOn: number;
-  problem: string;
-  competition?: string;
-  submitterToken?: string;
+  timeout: number;
+  tests: Test[];
 }
 
 export namespace Request {
@@ -24,3 +18,10 @@ export namespace Request {
     return hasRequiredProperties;
   }
 }
+
+export const RequiredProperties: string[] = [
+  'lang',
+  'src',
+  'timeout',
+  'tests'
+];

@@ -27,8 +27,7 @@ export class Runner {
       lang: string,
       private src: string,
       private seconds: number,
-      private tests: Test[],
-      private showErrors: boolean) {
+      private tests: Test[]) {
     let params = SupportedLanguages[lang];
     this.compiler = params.compiler;
     this.filename = params.filename;
@@ -76,9 +75,6 @@ export class Runner {
             resolve(this.runAllTests(container));
           } else {
             let compilationErrorResult: any = { status: 'CompilationError' };
-            if (this.showErrors) {
-              compilationErrorResult.message = result.message;
-            }
             resolve(compilationErrorResult);
           }
         },
@@ -148,7 +144,7 @@ export class Runner {
           let feebackResult: Result;
           if (firstErr) {
             feebackResult = { status: firstErr.status };
-            if (this.showErrors && firstErr.message) {
+            if (firstErr.message) {
               feebackResult.message = firstErr.message;
             }
             if (hints.length) {

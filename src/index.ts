@@ -2,17 +2,7 @@ import * as bodyParser from 'body-parser';
 import { Promise } from 'es6-promise';
 import * as express from 'express';
 
-import {
-  CompetitionDoesNotExistError,
-  CompetitionEndedError,
-  CompetitionNotStartedError,
-  InvalidRequestError,
-  InvalidTokenError,
-  LanguageUnsupportedError,
-  NoTokenError,
-  ProblemDoesNotExistError
-} from './errors';
-import { Firebase } from './firebase';
+import { Error, InvalidRequestError, LanguageUnsupportedError } from './errors';
 import { HttpStatusCodes } from './http-status-codes';
 import { Request } from './request';
 import { Runner } from './runner';
@@ -38,115 +28,38 @@ app.use((req, res, next) => {
 });
 
 /**
- * To be posted when a user is newly verified.
- *
- * Retrieves all of that user's successful submissions and moves them to
- */
-app.post('/verified', jsonParser, (req, res) => {
-  let request = req.body;
-  if (request.token) {
-    Firebase.moveSuccessfulSubmissionsToLeaderboard(request.token)
-        .then(() => res.sendStatus(HttpStatusCodes.Success));
-  } else {
-    res.status(HttpStatusCodes.BadRequest).send(NoTokenError);
-  }
-});
-
-/**
  * See documentation on usage here:
  * https://github.com/Tahler/capstone-api/README.md
  */
 app.post('/api', jsonParser, (req, res) => {
   let request: Request = req.body;
-  request.submittedOn = new Date().getTime();
   handleRequest(request, res);
 });
 
 /**
- * Throws the first found error. If none are found, returns true.
+ * Returns the first found error. If none are found, returns null.
  * Yeah, I hate this design too.
  */
-async function validateRequest(request: Request): Promise<boolean> {
+function firstError(request: Request): Error {
   if (!Request.hasRequiredProperties(request)) {
-    throw new InvalidRequestError(request);
+    return new InvalidRequestError(request);
   }
   if (!langIsSupported(request.lang)) {
-    throw new LanguageUnsupportedError(request.lang);
+    return new LanguageUnsupportedError(request.lang);
   }
-
-  let problemId = request.problem;
-  let competitionId = request.competition;
-
-  if (competitionId === undefined) {
-    let problemExists = await Firebase.problemExists(problemId);
-    if (!problemExists) {
-      throw new ProblemDoesNotExistError(problemId);
-    }
-  } else {
-    let userToken = request.submitterToken;
-    if (userToken === undefined) {
-      throw NoTokenError;
-    }
-
-    try {
-      await Firebase.decodeToken(userToken);
-    } catch (err) {
-      throw InvalidTokenError;
-    }
-
-    let competitionExists = await Firebase.competitionExists(competitionId);
-    if (!competitionExists) {
-      throw new CompetitionDoesNotExistError(competitionId);
-    }
-
-    let competitionHasStarted =
-        await Firebase.competitionStartTimeBefore(competitionId, request.submittedOn);
-    if (!competitionHasStarted) {
-      throw new CompetitionNotStartedError(competitionId);
-    }
-
-    let competitionHasEnded =
-        await Firebase.competitionEndTimeAfter(competitionId, request.submittedOn);
-    if (competitionHasEnded) {
-      throw new CompetitionEndedError(competitionId);
-    }
-
-    let problemExists = await Firebase.competitionProblemExists(competitionId, problemId);
-    if (!problemExists) {
-      throw new ProblemDoesNotExistError(problemId);
-    }
-  }
-
-  return true;
+  return null;
 }
 
 async function handleRequest(request: Request, res: express.Response): Promise<void> {
-  try {
-    // This will throw errors if not valid.
-    await validateRequest(request);
-    // Retreve the needed info from Firebase
-    // Load showErrors, timeout, and test cases asynchronously
-    let problemLocation = request.competition
-        ? `/competitionProblems/${request.competition}/${request.problem}`
-        : `/problems/${request.problem}`;
-    let [showErrors, timeout, tests] = await Promise.all([
-      Firebase.get(`${problemLocation}/showErrors`),
-      Firebase.get(`${problemLocation}/timeout`),
-      Firebase.get(`/tests/${request.problem}`)
-    ]);
-    // Ready to execute code
-    let runner = new Runner(request.lang, request.src, timeout, tests, showErrors);
-    let result = await runner.run();
-    if (request.submitterToken) {
-      Firebase.recordResult(request, result);
-    }
-    res.status(HttpStatusCodes.Success).send(result);
-  } catch (err) {
-    console.error('err: ' + JSON.stringify(err));
+  let err = firstError(request);
+  if (err) {
+    console.error('err:', JSON.stringify(err));
     res.status(HttpStatusCodes.BadRequest).send(err);
+  } else {
+    let runner = new Runner(request.lang, request.src, request.timeout, request.tests);
+    let result = await runner.run();
+    res.status(HttpStatusCodes.Success).send(result);
   }
 }
 
 app.listen(Port, () => console.log(`Listening on port ${Port}`));
-
-export const App = app;
