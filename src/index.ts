@@ -62,4 +62,4 @@ async function handleRequest(request: Request, res: express.Response): Promise<v
   }
 }
 
-app.listen(Port, () => console.log(`Listening on port ${Port}`));
+app.listen(Port, () => console.log(`Compilation API listening on port ${Port}`));

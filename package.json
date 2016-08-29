@@ -1,5 +1,5 @@
 {
-  "name": "nu-code",
+  "name": "nu-code-compilation-api",
   "version": "1.0.0",
   "description": "The compilation API for NU Code, my capstone project.",
   "scripts": {
@@ -7,14 +7,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com:Tahler/capstone-api.git"
+    "url": "git+ssh://git@github.com:Tahler/compilation-api.git"
   },
   "author": "Tyler Berry",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Tahler/capstone-api/issues"
+    "url": "https://github.com/Tahler/compilation-api/issues"
   },
-  "homepage": "https://github.com/Tahler/capstone-api/blob/master/README.md",
+  "homepage": "https://github.com/Tahler/compilation-api/blob/master/README.md",
   "dependencies": {
     "body-parser": "^1.15.1",
     "es6-promise": "^3.2.1",
