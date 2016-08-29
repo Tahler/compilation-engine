@@ -37,30 +37,7 @@ gulp.task('copy-api-dockerfile', function () {
     .pipe(gulp.dest('dist'));
 });
 
-gulp.task('build', ['transpile', 'copy-src-files']);
-
-// Starts / restarts node
-var node;
-gulp.task('start-server', ['build'], function () {
-  if (node) {
-    node.kill();
-  }
-  process.chdir('dist');
-  node = spawn('node', ['./index.js'], {stdio: 'inherit'})
-  process.chdir('..');
-  node.on('close', function (code) {
-    if (code === 8) {
-      gulp.log('Error detected, waiting for changes...');
-    }
-  });
-});
-
-// Watches for file changes and restarts the node instance
-gulp.task('run', ['start-server'], function () {
-  gulp.watch('src/**/*', ['start-server']);
-});
-
-gulp.task('build-api', ['build', 'copy-api-dockerfile'], shell.task(
+gulp.task('build-api', ['transpile', 'copy-src-files', 'copy-api-dockerfile'], shell.task(
   'docker build -t api -f ./dist/api.dockerfile ./dist'));
 
 // Starts / restarts the api container
@@ -76,11 +53,3 @@ gulp.task('stop-api', shell.task([
 
 gulp.task('build-compiler', shell.task(
   'docker build -t compiler -f ./src/dockerfile/compiler.dockerfile .'));
-
-gulp.task('default', ['run']);
-
-process.on('exit', function() {
-  if (node) {
-    node.kill();
-  }
-});
