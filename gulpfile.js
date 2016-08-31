@@ -41,12 +41,12 @@ gulp.task('build-api', ['transpile', 'copy-src-files', 'copy-api-dockerfile'], s
   'docker build -t compilation-api -f ./dist/api.dockerfile ./dist'));
 
 // Starts / restarts the api container
-gulp.task('start-api', ['build-api', 'stop-api'], shell.task(
+gulp.task('start', ['build-api', 'stop'], shell.task(
   'docker run -d --name compilation-api -p 3006:80 -v /var/run/docker.sock:/var/run/docker.sock compilation-api'));
 
 // '2>/dev/null' ignores stderr
 // '|| true' "forces" a 0 exit code
-gulp.task('stop-api', shell.task([
+gulp.task('stop', shell.task([
   'docker kill compilation-api 2>/dev/null || true',
   'docker rm compilation-api 2>/dev/null || true'
 ]));
