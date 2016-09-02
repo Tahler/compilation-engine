@@ -2,6 +2,9 @@
 
 This is the compilation API for [NU Code](http://code.neumont.edu/), my capstone project.
 
+To see how this service fits into the application, see
+[the dispatch service](https://github.com/Tahler/nu-code-dispatch).
+
 Technologies:
 - [Node](https://nodejs.org/en/) / [TypeScript](https://www.typescriptlang.org/) / [Express](http://expressjs.com/) to define the API succinctly.
 - [Docker](https://www.docker.com/) to contain user-submitted code.
