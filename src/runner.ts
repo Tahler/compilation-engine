@@ -57,7 +57,7 @@ export class Runner {
 
   private startContainer(): Promise<DockerContainer> {
     let container = new DockerContainer(DockerImage);
-    return container.start().then(() => container);
+    return container.start().then(() => container, err => console.error(err));
   }
 
   /**
